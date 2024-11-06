@@ -28,8 +28,9 @@ To run the web scraper application, follow these steps:
 $ python main.py
 ```
 
-
 This will launch the Tkinter GUI, where you can input the URL and page range for scraping.
+
+![screenshot](image.png)
 
 ## Building with PyInstaller
 If you want to create a standalone executable for the application, you can use PyInstaller. Follow these steps:
