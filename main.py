@@ -1,16 +1,43 @@
+"""
+This module provides a web scraping application using Tkinter for the user interface.
+
+The application allows users to input a URL and a range of pages to scrape data from a website.
+It retrieves book information, including titles, prices, and availability, and displays the results
+in a scrollable text area. Users can also save the scraped data to a JSON file.
+"""
+
+import json
+import threading
+import time
 import tkinter as tk
 from tkinter import ttk, scrolledtext, messagebox
+from datetime import datetime
+
 import requests
 from bs4 import BeautifulSoup
-import json
-from datetime import datetime
-import threading
+
 
 class WebScraperApp:
-    def __init__(self, root):
-        self.root = root
+    """A Tkinter application for scraping book data from a specified website.
+
+    This class manages the user interface and the scraping process, allowing users to input
+    a base URL and a range of pages to scrape. It handles threading for the scraping operation
+    to keep the UI responsive and provides functionality to save the scraped data.
+    """
+
+    def __init__(self, main_window: tk.Tk) -> None:
+        """Initialization method. Sets up the basic configuration of the application.
+
+        Args:
+            main_window (tk.Tk): The Tkinter root window.
+        """
+
+        self.root = main_window
         self.root.title("Web Scraper")
         self.root.geometry("800x600")
+
+        self.timeout = 10
+        self.sleep_time = 1
 
         # Variables
         self.url_var = tk.StringVar(value="https://books.toscrape.com/catalogue/")
@@ -21,7 +48,9 @@ class WebScraperApp:
 
         self.create_widgets()
 
-    def create_widgets(self):
+    def create_widgets(self) -> None:
+        """Creates widgets and builds the application's UI."""
+
         # URL Input
         url_frame = ttk.LabelFrame(self.root, text="URL Settings", padding=10)
         url_frame.pack(fill="x", padx=10, pady=5)
@@ -63,7 +92,12 @@ class WebScraperApp:
         self.result_text = scrolledtext.ScrolledText(self.root, height=20)
         self.result_text.pack(fill="both", expand=True, padx=10, pady=5)
 
-    def start_scraping(self):
+    def start_scraping(self) -> None:
+        """Starts the scraping process.
+
+        Uses a thread to scrape data and updates the UI accordingly.
+        """
+
         if self.is_scraping:
             return
 
@@ -77,7 +111,12 @@ class WebScraperApp:
         thread.daemon = True
         thread.start()
 
-    def scrape_data(self):
+    def scrape_data(self) -> None:
+        """Scrapes data from the specified page range.
+
+        Updates the progress during scraping and handles errors.
+        """
+
         try:
             start = self.start_page.get()
             end = self.end_page.get()
@@ -90,7 +129,7 @@ class WebScraperApp:
                 url = f"{self.url_var.get()}page-{page_num}.html"
                 self.status_var.set(f"Scraping page {page_num}...")
 
-                response = requests.get(url)
+                response = requests.get(url, timeout=self.timeout)
                 response.raise_for_status()
 
                 soup = BeautifulSoup(response.content, "html.parser")
@@ -115,6 +154,8 @@ class WebScraperApp:
                 progress = (page_num - start + 1) / total_pages * 100
                 self.progress_var.set(progress)
 
+                time.sleep(self.sleep_time)
+
             self.status_var.set("Scraping completed!")
             messagebox.showinfo("Complete", "Scraping process has finished!")
 
@@ -129,7 +170,12 @@ class WebScraperApp:
             self.is_scraping = False
             self.start_btn.config(text="Start Scraping")
 
-    def save_data(self):
+    def save_data(self) -> None:
+        """Saves the scraped data to a JSON file.
+
+        Displays a warning if there is no data to save.
+        """
+
         if not self.book_data:
             messagebox.showwarning("Warning", "No data to save!")
             return
